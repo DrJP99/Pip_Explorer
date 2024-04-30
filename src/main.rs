@@ -12,9 +12,9 @@ use std::vec;
 
 mod file;
 
-fn to_string(output: Vec<u8>) -> Vec<String> {
-    let mut result: Vec<String> = vec![];
-    let mut word = String::new();
+fn to_string(output: Vec<u8>) -> Vec<File> {
+    // let mut result: Vec<String> = vec![];
+    // let mut word: String = String::new();
     let mut line: Vec<u8> = vec![];
     let mut files: Vec<File> = vec![];
     let mut first: bool = true;
@@ -23,24 +23,25 @@ fn to_string(output: Vec<u8>) -> Vec<String> {
     for c in output {
         match c {
             10 => {
-                result.push(word);
+                line.push(c);
+                // result.push(word);
                 if (first) {
                     first = false;
                 } else {
                     files.push(out_to_file(&line));
                 }
-                word = String::new();
+                // word = String::new();
                 line = vec![];
                 continue;
             }
             _ => {
                 line.push(c);
-                word.push(c as char);
+                // word.push(c as char);
             }
         }
     }
 
-    return result;
+    return files;
 }
 
 fn out_to_string(output: Vec<u8>) -> String {
@@ -76,7 +77,7 @@ fn out_to_file(output: &Vec<u8>) -> File {
     let mut word = String::new();
     for c in output {
         match c {
-            32 => {
+            10 | 32 => {
                 println!("word: {} :: curr: {}", word, curr);
                 if (word.to_string().is_empty()) {
                     continue;
@@ -87,6 +88,7 @@ fn out_to_file(output: &Vec<u8>) -> File {
                 }
             }
             _ => {
+                println!("{}", word);
                 word.push(*c as char);
             }
         }
@@ -101,9 +103,9 @@ fn out_to_file(output: &Vec<u8>) -> File {
     };
 }
 
-fn list_files(dir: &String) -> Vec<String> {
-    let mut files: Vec<String> = Vec::new();
-    files.push(String::from(".."));
+fn list_files(dir: &String) -> Vec<File> {
+    let mut files: Vec<File> = Vec::new();
+    // files.push(String::from(".."));
 
     let output = Command::new("ls")
         .arg("-l")
@@ -112,19 +114,19 @@ fn list_files(dir: &String) -> Vec<String> {
         .expect("ls command failed to start");
     let out = output.stdout;
 
-    let mut all_files: Vec<String> = to_string(out);
+    let mut all_files: Vec<File> = to_string(out);
     files.append(&mut all_files);
 
     return files;
 }
 
-fn print_files(files: &Vec<String>, index: &usize) {
+fn print_files(files: &Vec<File>, index: &usize) {
     // println!("index: {}", index);
     for (i, f) in files.iter().enumerate() {
         if (i == *index) {
-            println!("{}", f.bold().black().on_truecolor(225, 225, 225));
+            println!("{}", f.name.bold().black().on_truecolor(225, 225, 225));
         } else {
-            println!("{}", f.truecolor(225, 225, 225));
+            println!("{}", f.name.truecolor(225, 225, 225));
         }
     }
 }
@@ -154,7 +156,7 @@ fn main() {
     let mut index: usize = 0;
 
     let stdout = Term::buffered_stdout();
-    let mut files: Vec<String> = vec![];
+    let mut files: Vec<File> = vec![];
     let mut refresh: bool = true;
 
     loop {
@@ -194,7 +196,7 @@ fn main() {
             }
             'd' => {
                 // move forward
-                let location = &files[index];
+                let location = &files[index].name;
                 dir = change_directory(&dir, location.to_string());
                 index = 0;
                 refresh = true;
