@@ -19,7 +19,6 @@ fn to_string(output: Vec<u8>) -> Vec<File> {
     let mut files: Vec<File> = vec![];
     let mut first: bool = true;
 
-    println!("{:?}", output);
     for c in output {
         match c {
             10 => {
@@ -45,7 +44,6 @@ fn to_string(output: Vec<u8>) -> Vec<File> {
 }
 
 fn out_to_string(output: Vec<u8>) -> String {
-    println!("{:?}", output);
     let mut word = String::new();
     for c in output {
         match c {
@@ -57,8 +55,6 @@ fn out_to_string(output: Vec<u8>) -> String {
 }
 
 fn out_to_file(output: &Vec<u8>) -> File {
-    println!("{:?}", output);
-
     // let mut permissions: String;
     // let mut num_links: u32;
     // let mut owner: String;
@@ -69,6 +65,8 @@ fn out_to_file(output: &Vec<u8>) -> File {
     // let mut time: String;
     // let mut name: String;
 
+    let mut in_quotes: bool = false;
+
     const TOTAL_COLS: usize = 9;
     let mut cols: [String; TOTAL_COLS] = Default::default();
 
@@ -78,23 +76,23 @@ fn out_to_file(output: &Vec<u8>) -> File {
     for c in output {
         match c {
             10 | 32 => {
-                println!("word: {} :: curr: {}", word, curr);
                 if (word.to_string().is_empty()) {
                     continue;
                 } else {
-                    cols[curr] = word.to_string();
-                    word = String::from("");
-                    curr += 1;
+                    if (curr == 8 && *c == 32) {
+                        word.push(*c as char)
+                    } else {
+                        cols[curr] = word.to_string();
+                        word = String::from("");
+                        curr += 1;
+                    }
                 }
             }
             _ => {
-                println!("{}", word);
                 word.push(*c as char);
             }
         }
     }
-
-    println!("{:?}", cols);
 
     return File {
         name: cols[8].to_string(),
@@ -113,7 +111,6 @@ fn list_files(dir: &String) -> Vec<File> {
         .output()
         .expect("ls command failed to start");
     let out = output.stdout;
-
     let mut all_files: Vec<File> = to_string(out);
     files.append(&mut all_files);
 
@@ -121,7 +118,6 @@ fn list_files(dir: &String) -> Vec<File> {
 }
 
 fn print_files(files: &Vec<File>, index: &usize) {
-    // println!("index: {}", index);
     for (i, f) in files.iter().enumerate() {
         if (i == *index) {
             println!("{}", f.name.bold().black().on_truecolor(225, 225, 225));
@@ -204,23 +200,4 @@ fn main() {
             _ => continue,
         }
     }
-
-    // print!("{:?}", my_files);
-
-    // let mut name = String::new();
-    // println!("Enter your name:");
-    // io::stdin()
-    //     .read_line(&mut name)
-    //     .expect("Failed to read line");
-
-    // println!("{}[2J", 27 as char); // clear terminal
-
-    // println!("Hello, {}", name);
-
-    // let output = Command::new("sh")
-    //     .arg("echo $USER")
-    //     .output()
-    //     .expect("Command failed");
-
-    // println!("{:?}", output.stdout);
 }
