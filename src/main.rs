@@ -1,4 +1,5 @@
 #![allow(unused)]
+use colored::Colorize;
 use console::Term;
 use std::env;
 use std::io;
@@ -53,9 +54,13 @@ fn list_files(dir: &String) -> Vec<String> {
     return files;
 }
 fn print_files(files: &Vec<String>, index: &usize) {
-    println!("index: {}", index);
-    for f in files {
-        println!("{}", f);
+    // println!("index: {}", index);
+    for (i, f) in files.iter().enumerate() {
+        if (i == *index) {
+            println!("{}", f.bold().black().on_truecolor(225, 225, 225));
+        } else {
+            println!("{}", f.truecolor(225, 225, 225));
+        }
     }
 }
 
@@ -88,7 +93,7 @@ fn main() {
 
     loop {
         println!("{}[2J", 27 as char); // clear terminal
-        println!("{}", dir);
+        println!("{}\n", dir);
 
         files = list_files(&dir);
         print_files(&files, &index);
