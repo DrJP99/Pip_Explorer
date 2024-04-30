@@ -26,11 +26,23 @@ fn to_string(output: Vec<u8>) -> Vec<String> {
     return result;
 }
 
-fn list_files(dir: String) -> Vec<String> {
+fn out_to_string(output: Vec<u8>) -> String {
+    let mut word = String::new();
+    for c in output {
+        match c {
+            10 => break,
+            _ => word.push(c as char),
+        }
+    }
+    return word;
+}
+
+fn list_files(dir: &String) -> Vec<String> {
     let mut files: Vec<String> = Vec::new();
     files.push(String::from(".."));
 
     let output = Command::new("ls")
+        .current_dir(dir)
         .output()
         .expect("ls command failed to start");
     let out = output.stdout;
@@ -39,6 +51,24 @@ fn list_files(dir: String) -> Vec<String> {
     files.append(&mut all_files);
 
     return files;
+}
+fn print_files(files: &Vec<String>, index: &usize) {
+    println!("index: {}", index);
+    for f in files {
+        println!("{}", f);
+    }
+}
+
+fn change_directory(dir: &String, location: String) -> String {
+    // Command::new("cd dir");
+    // Command::new("cd").current_dir(dir).arg(location);
+    let new_dir: String = vec![dir.to_owned(), location.to_owned()].join("/");
+    let output = Command::new("pwd")
+        .current_dir(new_dir)
+        .output()
+        .expect("error");
+
+    return out_to_string(output.stdout);
 }
 
 fn main() {
@@ -51,20 +81,53 @@ fn main() {
         Err(e) => panic!("$HOME is not set ({})", e),
     }
 
-    let index = 0;
+    let mut index: usize = 0;
 
-    println!("{}", dir);
     let stdout = Term::buffered_stdout();
-    // loop {
-    //     let mut key;
+    let mut files: Vec<String> = vec![];
 
-    //     key = stdout.read_char().expect("Error");
+    loop {
+        println!("{}[2J", 27 as char); // clear terminal
+        println!("{}", dir);
 
-    //     println!("You pressed: {}", key);
-    // }
+        files = list_files(&dir);
+        print_files(&files, &index);
 
-    let my_files = list_files(dir);
-    print!("{:?}", my_files);
+        let mut key;
+
+        key = stdout.read_char().expect("Error");
+        match key {
+            'w' => {
+                // move up
+                if (index == 0) {
+                    index = 0;
+                } else {
+                    index -= 1;
+                }
+            }
+            's' => {
+                // move down
+                index += 1;
+                if (index >= files.len().try_into().unwrap()) {
+                    index = files.len() - 1;
+                }
+            }
+            'a' => {
+                // move back
+                dir = change_directory(&dir, "..".to_owned());
+                index = 0;
+            }
+            'd' => {
+                // move forward
+                let location = &files[index];
+                dir = change_directory(&dir, location.to_string());
+                index = 0;
+            }
+            _ => continue,
+        }
+    }
+
+    // print!("{:?}", my_files);
 
     // let mut name = String::new();
     // println!("Enter your name:");
